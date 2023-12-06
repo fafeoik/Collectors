@@ -9,9 +9,7 @@ public class Collector : MonoBehaviour
     [SerializeField] private Transform _trunk;
 
     private CollectorMover _collectorMover;
-    private Lootbox _carriedLootbox;
     private Transform _detectedLootbox;
-
     private bool _isFree = true;
     private bool _isComingToLootbox = false;
     private bool _isComingHome = false;
@@ -29,15 +27,7 @@ public class Collector : MonoBehaviour
             {
                 if(_detectedLootbox == lootbox.transform)
                 {
-                    _carriedLootbox = lootbox;
-                    _carriedLootbox.transform.SetParent(_trunk);
-                    _carriedLootbox.transform.localPosition = new Vector3(0, 0, 0);
-                    _carriedLootbox.transform.localRotation = Quaternion.identity;
-
-                    _isComingHome = true;
-                    _isComingToLootbox = false;
-
-                    _collectorMover.StartMoving(_base);
+                    TakeLootbox();
                 }
             }
         }
@@ -45,13 +35,7 @@ public class Collector : MonoBehaviour
         {
             if(collider.TryGetComponent<Base>(out Base collectorBase))
             {
-                _isComingHome = false;
-                _isFree = true;
-
-                _collectorMover.StopMoving();
-
-                Destroy(_carriedLootbox.gameObject);
-                collectorBase.AddLootbox();
+                UnloadLootbox(collectorBase);
             }
         }
     }
@@ -71,5 +55,28 @@ public class Collector : MonoBehaviour
             _collectorMover.StartMoving(lootboxPosition);
             return true;
         }
+    }
+
+    private void TakeLootbox()
+    {
+        _isComingHome = true;
+        _isComingToLootbox = false;
+
+        _detectedLootbox.SetParent(_trunk);
+        _detectedLootbox.localPosition = new Vector3(0, 0, 0);
+        _detectedLootbox.localRotation = Quaternion.identity;
+
+        _collectorMover.StartMoving(_base);
+    }
+
+    private void UnloadLootbox(Base collectorBase)
+    {
+        _collectorMover.StopMoving();
+
+        Destroy(_detectedLootbox.gameObject);
+        collectorBase.AddLootbox();
+
+        _isComingHome = false;
+        _isFree = true;
     }
 }

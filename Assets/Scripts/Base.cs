@@ -7,23 +7,29 @@ public class Base : MonoBehaviour
 {
     [SerializeField] private List<Collector> _collectors;
 
+    private Queue<Lootbox> _detectedLootboxes;
     private LootboxScanner _scanner;
-
-    private Coroutine _getNewLootboxCoroutine;
-
+    private Coroutine _scanCoroutine;
+    private Coroutine _TakeLootboxCoroutine;
     private int _lootboxesAmount = 0;
+    private float _scanCooldown = 1f;
+    private float _takeNewLootboxCooldown = 1f;
 
     private void Start()
     {
         _scanner = GetComponent<LootboxScanner>();
-
-        _getNewLootboxCoroutine = StartCoroutine(GetNewLootbox());
+        _detectedLootboxes = new Queue<Lootbox>();
+        _scanCoroutine = StartCoroutine(Scan());
+        _TakeLootboxCoroutine = StartCoroutine(TakeNewLootbox());
     }
 
     private void OnDestroy()
     {
-        if (_getNewLootboxCoroutine != null)
-            StopCoroutine(_getNewLootboxCoroutine);
+        if (_scanCoroutine != null)
+            StopCoroutine(_scanCoroutine);
+
+        if (_TakeLootboxCoroutine != null) 
+            StopCoroutine(_TakeLootboxCoroutine);
     }
 
     public void AddLootbox()
@@ -31,37 +37,40 @@ public class Base : MonoBehaviour
         _lootboxesAmount++;
     }
 
-    private IEnumerator GetNewLootbox()
+    private IEnumerator Scan()
     {
-        Lootbox newLootbox;
+        var waitForCooldown = new WaitForSeconds(_scanCooldown);
 
-        var waitForOneSecond = new WaitForSeconds(1f);
+        while (enabled)
+        {
+            yield return waitForCooldown;
+
+            _scanner.Scan(ref _detectedLootboxes);
+        }
+    }
+
+    private IEnumerator TakeNewLootbox()
+    {
+        var waitForOneSecond = new WaitForSeconds(_takeNewLootboxCooldown);
 
         while (enabled)
         {
             yield return waitForOneSecond;
 
-            bool isNewLootboxFound = _scanner.TryScan(out newLootbox);
-
-            if (isNewLootboxFound == false)
+            if(_detectedLootboxes.Count == 0)
             {
                 continue;
             }
 
-            bool isFreeCollectorFound = false;
-
-            while (isFreeCollectorFound == false)
+            foreach (Collector collector in _collectors)
             {
-                yield return waitForOneSecond;
+                Lootbox newLootbox = _detectedLootboxes.Peek();
 
-                foreach (Collector collector in _collectors)
+                if (collector.TryMove(newLootbox.transform))
                 {
-                    if (collector.TryMove(newLootbox.transform))
-                    {
-                        newLootbox.MakeReserved();
-                        isFreeCollectorFound = true;
-                        break;
-                    }
+                    newLootbox.MakeReserved();
+                    _detectedLootboxes.Dequeue();
+                    break;
                 }
             }
         }

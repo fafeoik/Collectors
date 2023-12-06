@@ -6,14 +6,15 @@ using UnityEngine;
 public class Base : MonoBehaviour
 {
     [SerializeField] private List<Collector> _collectors;
+    [SerializeField] private float _scanCooldown;
+    [SerializeField] private float _takeNewLootboxCooldown;
 
     private Queue<Lootbox> _detectedLootboxes;
     private LootboxScanner _scanner;
     private Coroutine _scanCoroutine;
     private Coroutine _TakeLootboxCoroutine;
     private int _lootboxesAmount = 0;
-    private float _scanCooldown = 1f;
-    private float _takeNewLootboxCooldown = 1f;
+
 
     private void Start()
     {
@@ -28,7 +29,7 @@ public class Base : MonoBehaviour
         if (_scanCoroutine != null)
             StopCoroutine(_scanCoroutine);
 
-        if (_TakeLootboxCoroutine != null) 
+        if (_TakeLootboxCoroutine != null)
             StopCoroutine(_TakeLootboxCoroutine);
     }
 
@@ -57,7 +58,7 @@ public class Base : MonoBehaviour
         {
             yield return waitForOneSecond;
 
-            if(_detectedLootboxes.Count == 0)
+            if (_detectedLootboxes.Count == 0)
             {
                 continue;
             }
@@ -66,10 +67,10 @@ public class Base : MonoBehaviour
             {
                 Lootbox newLootbox = _detectedLootboxes.Peek();
 
-                if (collector.IsFree)
+                if (collector.State == State.Free)
                 {
-                    collector.Move(newLootbox.transform);
                     _detectedLootboxes.Dequeue();
+                    collector.Move(newLootbox.transform);
                     newLootbox.MakeReserved();
                     break;
                 }

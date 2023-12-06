@@ -10,11 +10,8 @@ public class Collector : MonoBehaviour
 
     private CollectorMover _collectorMover;
     private Transform _detectedLootbox;
-    private bool _isComingToLootbox = false;
-    private bool _isComingHome = false;
 
-    public bool IsFree { get; private set; } = true;
-
+    public State State { get; private set; } = State.Free;
 
     private void Start()
     {
@@ -23,7 +20,7 @@ public class Collector : MonoBehaviour
 
     private void OnTriggerEnter(Collider collider)
     {
-        if (_isComingToLootbox)
+        if (State == State.Gather)
         {
             if (collider.TryGetComponent<Lootbox>(out Lootbox lootbox))
             {
@@ -33,7 +30,7 @@ public class Collector : MonoBehaviour
                 }
             }
         }
-        else if (_isComingHome)
+        else if (State == State.Return)
         {
             if (collider.TryGetComponent<Base>(out Base collectorBase))
             {
@@ -44,8 +41,7 @@ public class Collector : MonoBehaviour
 
     public void Move(Transform lootboxPosition)
     {
-        IsFree = false;
-        _isComingToLootbox = true;
+        State = State.Gather;
 
         _detectedLootbox = lootboxPosition;
         _collectorMover.StartMoving(lootboxPosition);
@@ -53,8 +49,7 @@ public class Collector : MonoBehaviour
 
     private void TakeLootbox()
     {
-        _isComingHome = true;
-        _isComingToLootbox = false;
+        State = State.Return;
 
         _detectedLootbox.SetParent(_trunk);
         _detectedLootbox.localPosition = new Vector3(0, 0, 0);
@@ -70,7 +65,13 @@ public class Collector : MonoBehaviour
         Destroy(_detectedLootbox.gameObject);
         collectorBase.AddLootbox();
 
-        _isComingHome = false;
-        IsFree = true;
+        State = State.Free;
     }
+}
+
+public enum State
+{
+    Free,
+    Gather,
+    Return
 }

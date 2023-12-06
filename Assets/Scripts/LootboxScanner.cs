@@ -16,7 +16,7 @@ public class LootboxScanner : MonoBehaviour
         {
             if(collider.TryGetComponent<Lootbox>(out Lootbox foundLootbox))
             {
-                if (foundLootbox.IsReserved == false)
+                if (foundLootbox.IsReserved == false && _detectedLootbox.Contains(foundLootbox) == false)
                 {
                     _detectedLootbox.Enqueue(foundLootbox);
                 }

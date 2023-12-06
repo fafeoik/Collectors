@@ -8,7 +8,7 @@ public class LootboxScanner : MonoBehaviour
 
     private Vector3 _halfExtents = new Vector3(25,10,25);
 
-    public void Scan(ref Queue<Lootbox> _detectedLootbox)
+    public void Scan(Queue<Lootbox> _detectedLootbox)
     {
         Collider[] foundColliders = Physics.OverlapBox(_overlapCubeCenter.position, _halfExtents);
 

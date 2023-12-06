@@ -45,7 +45,7 @@ public class Base : MonoBehaviour
         {
             yield return waitForCooldown;
 
-            _scanner.Scan(ref _detectedLootboxes);
+            _scanner.Scan(_detectedLootboxes);
         }
     }
 
@@ -66,10 +66,11 @@ public class Base : MonoBehaviour
             {
                 Lootbox newLootbox = _detectedLootboxes.Peek();
 
-                if (collector.TryMove(newLootbox.transform))
+                if (collector.IsFree)
                 {
-                    newLootbox.MakeReserved();
+                    collector.Move(newLootbox.transform);
                     _detectedLootboxes.Dequeue();
+                    newLootbox.MakeReserved();
                     break;
                 }
             }

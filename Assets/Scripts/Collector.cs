@@ -10,9 +10,11 @@ public class Collector : MonoBehaviour
 
     private CollectorMover _collectorMover;
     private Transform _detectedLootbox;
-    private bool _isFree = true;
     private bool _isComingToLootbox = false;
     private bool _isComingHome = false;
+
+    public bool IsFree { get; private set; } = true;
+
 
     private void Start()
     {
@@ -25,7 +27,7 @@ public class Collector : MonoBehaviour
         {
             if (collider.TryGetComponent<Lootbox>(out Lootbox lootbox))
             {
-                if(_detectedLootbox == lootbox.transform)
+                if (_detectedLootbox == lootbox.transform)
                 {
                     TakeLootbox();
                 }
@@ -33,28 +35,20 @@ public class Collector : MonoBehaviour
         }
         else if (_isComingHome)
         {
-            if(collider.TryGetComponent<Base>(out Base collectorBase))
+            if (collider.TryGetComponent<Base>(out Base collectorBase))
             {
                 UnloadLootbox(collectorBase);
             }
         }
     }
 
-    public bool TryMove(Transform lootboxPosition)
+    public void Move(Transform lootboxPosition)
     {
-        if (_isFree == false)
-        {
-            return false;
-        }
-        else
-        {
-            _detectedLootbox = lootboxPosition;
-            _isFree = false;
-            _isComingToLootbox = true;
+        IsFree = false;
+        _isComingToLootbox = true;
 
-            _collectorMover.StartMoving(lootboxPosition);
-            return true;
-        }
+        _detectedLootbox = lootboxPosition;
+        _collectorMover.StartMoving(lootboxPosition);
     }
 
     private void TakeLootbox()
@@ -77,6 +71,6 @@ public class Collector : MonoBehaviour
         collectorBase.AddLootbox();
 
         _isComingHome = false;
-        _isFree = true;
+        IsFree = true;
     }
 }

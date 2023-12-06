@@ -58,13 +58,13 @@ public class Base : MonoBehaviour
         {
             yield return waitForOneSecond;
 
-            if (_detectedLootboxes.Count == 0)
-            {
-                continue;
-            }
-
             foreach (Collector collector in _collectors)
             {
+                if (_detectedLootboxes.Count == 0)
+                {
+                    continue;
+                }
+
                 Lootbox newLootbox = _detectedLootboxes.Peek();
 
                 if (collector.State == State.Free)
@@ -72,7 +72,7 @@ public class Base : MonoBehaviour
                     _detectedLootboxes.Dequeue();
                     collector.Move(newLootbox.transform);
                     newLootbox.MakeReserved();
-                    break;
+                    
                 }
             }
         }

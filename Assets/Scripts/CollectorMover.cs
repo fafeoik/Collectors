@@ -16,12 +16,13 @@ public class CollectorMover : MonoBehaviour
 
     public void StopMoving()
     {
-        StopCoroutine(_moveCoroutine);
+        if (_moveCoroutine != null)
+            StopCoroutine(_moveCoroutine);
     }
 
     public void StartMoving(Transform lootboxPosition)
     {
-        if(_moveCoroutine != null)
+        if (_moveCoroutine != null)
         {
             StopCoroutine(_moveCoroutine);
         }

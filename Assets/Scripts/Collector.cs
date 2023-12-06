@@ -58,7 +58,7 @@ public class Collector : MonoBehaviour
 
     public bool TryMove(Transform lootboxPosition)
     {
-        if (!_isFree)
+        if (_isFree == false)
         {
             return false;
         }

@@ -4,20 +4,28 @@ using UnityEngine;
 
 public class LootboxScanner : MonoBehaviour
 {
-    [SerializeField] private Transform _lootboxContainer;
+    [SerializeField] private Transform _overlapCubeCenter;
 
-    public bool TryScan(out Transform newLootbox)
+    private Vector3 _halfExtents = new Vector3(25,10,25);
+
+    public bool TryScan(out Lootbox newLootbox)
     {
-        if (_lootboxContainer.childCount > 0)
+        Collider[] foundColliders = Physics.OverlapBox(_overlapCubeCenter.position, _halfExtents);
+
+        foreach(Collider collider in foundColliders)
         {
-            int firstElementIndex = 0;
-
-            newLootbox = _lootboxContainer.GetChild(firstElementIndex);
-
-            return true;
+            if(collider.TryGetComponent<Lootbox>(out Lootbox foundLootbox))
+            {
+                if (foundLootbox.IsReserved == false)
+                {
+                    newLootbox = foundLootbox;
+                    return true;
+                }
+            }
         }
 
         newLootbox = null;
+
         return false;
     }
 }

@@ -6,7 +6,6 @@ using UnityEngine;
 public class Base : MonoBehaviour
 {
     [SerializeField] private List<Collector> _collectors;
-    [SerializeField] private Transform _detectedLootboxesContainer;
 
     private LootboxScanner _scanner;
 
@@ -23,19 +22,18 @@ public class Base : MonoBehaviour
 
     private void OnDestroy()
     {
-        StopCoroutine(_getNewLootboxCoroutine);
+        if (_getNewLootboxCoroutine != null)
+            StopCoroutine(_getNewLootboxCoroutine);
     }
 
     public void AddLootbox()
     {
         _lootboxesAmount++;
-
-        print($"Лутбоксов собрано: {_lootboxesAmount}");
     }
 
     private IEnumerator GetNewLootbox()
     {
-        Transform newLootbox;
+        Lootbox newLootbox;
 
         var waitForOneSecond = new WaitForSeconds(1f);
 
@@ -45,22 +43,22 @@ public class Base : MonoBehaviour
 
             bool isNewLootboxFound = _scanner.TryScan(out newLootbox);
 
-            if (!isNewLootboxFound)
+            if (isNewLootboxFound == false)
             {
                 continue;
             }
 
             bool isFreeCollectorFound = false;
 
-            while (!isFreeCollectorFound)
+            while (isFreeCollectorFound == false)
             {
                 yield return waitForOneSecond;
 
                 foreach (Collector collector in _collectors)
                 {
-                    if (collector.TryMove(newLootbox))
+                    if (collector.TryMove(newLootbox.transform))
                     {
-                        newLootbox.SetParent(_detectedLootboxesContainer);
+                        newLootbox.MakeReserved();
                         isFreeCollectorFound = true;
                         break;
                     }

@@ -7,12 +7,37 @@ public class LootboxSpawner : MonoBehaviour
     [SerializeField] private Vector2 _negativeSpawnerEdge;
     [SerializeField] private Vector2 _positiveSpawnerEdge;
     [SerializeField] private Lootbox _lootboxPrefab;
+    [SerializeField] private float _spawnRate;
 
-    private void Update()
+    private Coroutine _spawnCoroutine;
+
+    private void Start()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        _spawnCoroutine = StartCoroutine(Spawn());
+    }
+
+    private void OnDestroy()
+    {
+        if (_spawnCoroutine != null)
+            StopCoroutine(_spawnCoroutine);
+    }
+
+    private IEnumerator Spawn()
+    {
+        float abscissaSpawnPosition;
+        float applicateSpawnPosition;
+        WaitForSeconds waitForNextSpawn = new WaitForSeconds(_spawnRate);
+
+        while (enabled)
         {
-            Instantiate(_lootboxPrefab, new Vector3(Random.Range(_negativeSpawnerEdge.x, _positiveSpawnerEdge.x), 0, Random.Range(_negativeSpawnerEdge.y, _positiveSpawnerEdge.y)), Quaternion.identity,transform);
+            abscissaSpawnPosition = Random.Range(_negativeSpawnerEdge.x, _positiveSpawnerEdge.x);
+            applicateSpawnPosition = Random.Range(_negativeSpawnerEdge.y, _positiveSpawnerEdge.y);
+
+            Vector3 spawnPosition = new Vector3(abscissaSpawnPosition, 0, applicateSpawnPosition);
+
+            Instantiate(_lootboxPrefab, spawnPosition, Quaternion.identity, transform);
+
+            yield return waitForNextSpawn;
         }
     }
 }

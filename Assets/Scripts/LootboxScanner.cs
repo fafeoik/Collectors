@@ -6,7 +6,7 @@ public class LootboxScanner : MonoBehaviour
 {
     [SerializeField] private Transform _overlapCubeCenter;
 
-    private Vector3 _halfExtents = new Vector3(25,10,25);
+    private Vector3 _halfExtents = new Vector3(50,5,50);
 
     public void Scan(Queue<Lootbox> _detectedLootbox)
     {

@@ -30,14 +30,14 @@ public class LootboxSpawner : MonoBehaviour
 
         while (enabled)
         {
+            yield return waitForNextSpawn;
+
             abscissaSpawnPosition = Random.Range(_negativeSpawnerEdge.x, _positiveSpawnerEdge.x);
             applicateSpawnPosition = Random.Range(_negativeSpawnerEdge.y, _positiveSpawnerEdge.y);
 
             Vector3 spawnPosition = new Vector3(abscissaSpawnPosition, 0, applicateSpawnPosition);
 
-            Instantiate(_lootboxPrefab, spawnPosition, Quaternion.identity, transform);
-
-            yield return waitForNextSpawn;
+            Instantiate(_lootboxPrefab, spawnPosition, Quaternion.identity, transform);           
         }
     }
 }

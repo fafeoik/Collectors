@@ -20,14 +20,14 @@ public class CollectorMover : MonoBehaviour
             StopCoroutine(_moveCoroutine);
     }
 
-    public void StartMoving(Transform lootboxPosition)
+    public void StartMoving(Transform target)
     {
         if (_moveCoroutine != null)
         {
             StopCoroutine(_moveCoroutine);
         }
 
-        _currentTarget = lootboxPosition;
+        _currentTarget = target;
 
         _moveCoroutine = StartCoroutine(Move());
     }

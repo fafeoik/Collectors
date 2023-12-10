@@ -4,15 +4,17 @@ using UnityEngine;
 
 public class BaseBuilder : MonoBehaviour
 {
-    [SerializeField] private Transform _basePrefab;
+    [SerializeField] private Base _basePrefab;
 
-    public void Build(Collector collector, Flag flag)
+    public void Build(Collector collector, Flag flag, LootboxScanner scanner)
     {
-        Transform newBase = Instantiate(_basePrefab, flag.transform.position, Quaternion.identity);
+        Base newBase = Instantiate(_basePrefab, flag.transform.position, Quaternion.identity);
+        newBase.GetScanner(scanner);
 
-        Transform _collectorsContainer = newBase.GetComponentInParent<CollectorsSpawner>().transform;
+        Transform _collectorsContainer = newBase.GetComponentInChildren<CollectorsCreator>().transform;
 
         collector.transform.SetParent(_collectorsContainer);
+        newBase.AddCollector(collector);
 
         Destroy(flag.gameObject);
     }

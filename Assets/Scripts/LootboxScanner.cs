@@ -4,23 +4,58 @@ using UnityEngine;
 
 public class LootboxScanner : MonoBehaviour
 {
-    [SerializeField] private Transform _overlapCubeCenter;
+    [SerializeField] private float _scanCooldown;
 
-    private Vector3 _halfExtents = new Vector3(50,5,50);
+    private Vector3 _halfExtents = new Vector3(25, 5, 25);
+    private Queue<Lootbox> _detectedLootboxes = new Queue<Lootbox>();
 
-    public void Scan(Queue<Lootbox> _detectedLootbox)
+    private Coroutine _scanCoroutine;
+
+    private void Start()
     {
-        Collider[] foundColliders = Physics.OverlapBox(_overlapCubeCenter.position, _halfExtents);
+        _scanCoroutine = StartCoroutine(Scan());
+    }
 
-        foreach(Collider collider in foundColliders)
+    private void OnDestroy()
+    {
+        if (_scanCoroutine != null)
+            StopCoroutine(_scanCoroutine);
+    }
+
+    public bool TryGetLootboxes(out Lootbox lootbox)
+    {
+        if (_detectedLootboxes.Count > 0)
         {
-            if(collider.TryGetComponent<Lootbox>(out Lootbox foundLootbox))
+            lootbox = _detectedLootboxes.Dequeue();
+            return true;
+        }
+        else
+        {
+            lootbox = null;
+            return false;
+        }
+    }
+
+    private IEnumerator Scan()
+    {
+        var waitForCooldown = new WaitForSeconds(_scanCooldown);
+
+        while (enabled)
+        {
+            Collider[] foundColliders = Physics.OverlapBox(transform.position, _halfExtents);
+
+            foreach (Collider collider in foundColliders)
             {
-                if (foundLootbox.IsReserved == false && _detectedLootbox.Contains(foundLootbox) == false)
+                if (collider.TryGetComponent<Lootbox>(out Lootbox foundLootbox)
+                     && foundLootbox.IsDetected == false
+                     && _detectedLootboxes.Contains(foundLootbox) == false)
                 {
-                    _detectedLootbox.Enqueue(foundLootbox);
+                    _detectedLootboxes.Enqueue(foundLootbox);
+                    foundLootbox.MakeDetected();
                 }
             }
+
+            yield return waitForCooldown;
         }
     }
 }

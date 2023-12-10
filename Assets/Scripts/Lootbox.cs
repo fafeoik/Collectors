@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class Lootbox : MonoBehaviour
 {
-    public bool IsReserved { get; private set; } = false;
+    public bool IsDetected { get; private set; } = false;
 
-    public void MakeReserved()
+    public void MakeDetected()
     {
-        IsReserved = true;
+        IsDetected = true;
     }
 }

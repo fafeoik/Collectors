@@ -33,12 +33,9 @@ public class RaycastHandler : MonoBehaviour
             {
                 _collectorBase = collectorBase;
             }
-            else if (hit.transform.TryGetComponent<Ground>(out Ground ground))
+            else if (hit.transform.TryGetComponent<Ground>(out Ground ground) && _collectorBase != null)
             {
-                if (_collectorBase != null)
-                {
-                    _collectorBase.CreateFlag(hit.point);
-                }
+                _collectorBase.StartBuilding(hit.point);
             }
         }
     }

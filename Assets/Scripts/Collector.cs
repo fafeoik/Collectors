@@ -2,103 +2,110 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(CollectorMover), typeof(BaseBuilder))]
+[RequireComponent(typeof(BaseBuilder))]
 public class Collector : MonoBehaviour
 {
     [SerializeField] private Transform _trunk;
+    [SerializeField] private float _speed;
 
-    private Transform _base;
     private LootboxStorage _storage;
-    private CollectorMover _collectorMover;
-    private Transform _detectedLootbox;
+    private Base _base;
+    private Lootbox _targetLootbox;
+    private Flag _targetFlag;
     private BaseBuilder _baseBuilder;
 
-    public State State { get; private set; } = State.Free;
+    private Coroutine _gatherCoroutine;
+    private Coroutine _buildCoroutine;
+
+    public bool IsFree { get; private set; } = true;
 
     private void Start()
     {
-        _collectorMover = GetComponent<CollectorMover>();
         _baseBuilder = GetComponent<BaseBuilder>();
     }
 
-    private void OnTriggerEnter(Collider collider)
+    private void OnDestroy()
     {
-        if (State == State.Gather)
-        {
-            if (collider.TryGetComponent<Lootbox>(out Lootbox lootbox))
-            {
-                if (_detectedLootbox == lootbox.transform)
-                {
-                    TakeLootbox();
-                }
-            }
-        }
-        else if (State == State.Return)
-        {
-            if (collider.TryGetComponent<Base>(out Base collectorBase))
-            {
-                UnloadLootbox();
-            }
-        }
-        else if(State == State.Building)
-        {
-            if(collider.TryGetComponent<Flag>(out Flag flag))
-            {
-                _baseBuilder.Build(this, flag);
+        if (_gatherCoroutine != null)
+            StopCoroutine(_gatherCoroutine);
 
-                
-            }
-        }
+        if (_buildCoroutine != null)
+            StopCoroutine(_buildCoroutine);
     }
 
-    public void Init(Base collectorBase, LootboxStorage storage)
+    public void StartGathering(Lootbox targetLootbox)
     {
-        _base = collectorBase.transform;
-        _storage = storage;
+        _targetLootbox = targetLootbox;
+        _gatherCoroutine = StartCoroutine(GatherLootbox());
     }
 
-    public void SetBuildingState()
+    public void StartBuild(Flag flag, LootboxScanner scanner)
     {
-        State = State.Building;
+        _targetFlag = flag;
+        _buildCoroutine = StartCoroutine(BuildBase(scanner));
     }
 
-    public void SetGatherState()
+    public void Init(Base collectorBase)
     {
-        State = State.Gather;
-    }
-
-    public void Move(Transform lootboxPosition)
-    {
-        _detectedLootbox = lootboxPosition;
-        _collectorMover.StartMoving(lootboxPosition);
+        _base = collectorBase;
+        _storage = _base.GetComponent<LootboxStorage>();
     }
 
     private void TakeLootbox()
     {
-        State = State.Return;
-
-        _detectedLootbox.SetParent(_trunk);
-        _detectedLootbox.localPosition = new Vector3(0, 0, 0);
-        _detectedLootbox.localRotation = Quaternion.identity;
-
-        _collectorMover.StartMoving(_base);
+        _targetLootbox.transform.SetParent(_trunk);
+        _targetLootbox.transform.localPosition = new Vector3(0, 0, 0);
+        _targetLootbox.transform.localRotation = Quaternion.identity;
     }
 
     private void UnloadLootbox()
     {
-        _collectorMover.StopMoving();
+        int lootboxAmount = 1;
 
-        Destroy(_detectedLootbox.gameObject);
-        _storage.ChangeLootboxAmount(1);
-
-        State = State.Free;
+        Destroy(_targetLootbox.gameObject);
+        _storage.ChangeLootboxAmount(lootboxAmount);
     }
-}
 
-public enum State
-{
-    Free,
-    Gather,
-    Return,
-    Building
+    private IEnumerator BuildBase(LootboxScanner scanner)
+    {
+        IsFree = false;
+
+        yield return StartCoroutine(Move(_targetFlag.transform));
+
+        _baseBuilder.Build(this,_targetFlag, scanner);
+
+        IsFree = true;
+    }
+
+    private IEnumerator GatherLootbox()
+    {
+        IsFree = false;
+        yield return StartCoroutine(Move(_targetLootbox.transform));
+
+        TakeLootbox();
+
+        yield return StartCoroutine(Move(_base.transform));
+
+        UnloadLootbox();
+
+        IsFree = true;
+    }
+
+    private IEnumerator Move(Transform target)
+    {
+        bool isStillMoving = true;
+
+        while (isStillMoving)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(target.transform.position - transform.position);
+
+            transform.position = Vector3.MoveTowards(transform.position, target.position, _speed * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _speed * Time.deltaTime);
+
+            if (transform.position == target.position)
+                isStillMoving = false;
+
+            yield return null;
+        }
+    }
 }

@@ -1,152 +1,164 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
-[RequireComponent(typeof(LootboxScanner), typeof(LootboxStorage), typeof(FlagCreator))]
+[RequireComponent(typeof(LootboxStorage), typeof(FlagCreator), typeof(Shop))]
 public class Base : MonoBehaviour
 {
-    [SerializeField] private Transform _collectorsParent;
-    [SerializeField] private float _scanCooldown;
-    [SerializeField] private float _takeNewLootboxCooldown;
-    [SerializeField] private Collector _collectorPrefab;
-    [SerializeField] private CollectorsSpawner _collectorsSpawner;
+    [SerializeField]private LootboxScanner _scanner;
 
-    private List<Collector> _collectors;
-    private Queue<Lootbox> _detectedLootboxes;
-    private LootboxScanner _scanner;
+    private List<Collector> _collectors = new List<Collector>();
     private LootboxStorage _storage;
     private FlagCreator _flagCreator;
-    private Transform _flag;
-    private Coroutine _scanCoroutine;
+    private Flag _flag;
+    private Shop _shop;
+
     private Coroutine _takeLootboxCoroutine;
     private Coroutine _findCollectorCoroutine;
-    private int _newCollectorPrice = 3;
-    private int _newBasePrice = 5;
+
     private int _maxCollectorsAmount = 3;
+    private bool _isCollectorNeededToBuild = false;
 
     private void Start()
     {
-        _scanner = GetComponent<LootboxScanner>();
-        _storage = GetComponent<LootboxStorage>();
-        _flagCreator = GetComponent<FlagCreator>();
-        _detectedLootboxes = new Queue<Lootbox>();
+        GetRequiredComponents();
 
-        _collectors = new List<Collector>();
+        _takeLootboxCoroutine = StartCoroutine(MakeCollectorsGather());
 
-        for (int i = 0; i < _collectorsParent.childCount; i++)
-        {
-            Collector collector = _collectorsParent.GetChild(i).GetComponent<Collector>();
-            collector.Init(this, _storage);
-            _collectors.Add(collector);
-        }
-
-        _scanCoroutine = StartCoroutine(Scan());
-        _takeLootboxCoroutine = StartCoroutine(GatherLootbox());
-
-        _storage.AmountChanged += BuyCollector;
+        _storage.AmountChanged += OnCollectorMoneyEnough;
+        OnCollectorMoneyEnough();
     }
 
     private void OnDestroy()
     {
-        if (_scanCoroutine != null)
-            StopCoroutine(_scanCoroutine);
-
         if (_takeLootboxCoroutine != null)
             StopCoroutine(_takeLootboxCoroutine);
 
-        if(_findCollectorCoroutine != null)
+        if (_findCollectorCoroutine != null)
             StopCoroutine(_findCollectorCoroutine);
 
-        _storage.AmountChanged -= BuyCollector;
+        _storage.AmountChanged -= OnCollectorMoneyEnough;
     }
 
-    public void CreateFlag(Vector3 position)
+    public void GetScanner(LootboxScanner scanner)
     {
-        _flag = _flagCreator.Create(position);
-        StartBuilding();
+        _scanner = scanner;
     }
 
-    private void BuyCollector()
+    private void GetRequiredComponents()
     {
-        if (_storage.LootboxAmount >= _newCollectorPrice && _collectors.Count < _maxCollectorsAmount)
+        _storage = GetComponent<LootboxStorage>();
+        _flagCreator = GetComponent<FlagCreator>();
+        _shop = GetComponent<Shop>();
+    }
+
+    private void OnCollectorMoneyEnough()
+    {
+        if (_collectors.Count < _maxCollectorsAmount && _shop.TryBuyCollector(_storage.LootboxAmount, out Collector collector))
         {
-            _collectors.Add(_collectorsSpawner.Spawn(this, _storage));
-            _storage.ChangeLootboxAmount(-_newCollectorPrice);
+            AddCollector(collector);
+            _storage.ChangeLootboxAmount(-_shop.CollectorPrice);
         }
     }
 
-    private void StartBuilding()
+    public void AddCollector(Collector collector)
     {
-        _storage.AmountChanged -= BuyCollector;
-        _storage.AmountChanged += BuildBase;
+        collector.Init(this);
+        _collectors.Add(collector);
     }
 
-    private void BuildBase()
+    public void StartBuilding(Vector3 position)
     {
-        if (_storage.LootboxAmount >= _newBasePrice)
+        int collectorsRequiredToBuild = 2;
+
+        if(_collectors.Count >= collectorsRequiredToBuild)
         {
-            _findCollectorCoroutine = StartCoroutine(FindFreeCollector());
+            if (_flagCreator.IsFlagCreated == false)
+            {
+                _storage.AmountChanged -= OnCollectorMoneyEnough;
+                _storage.AmountChanged += OnBaseMoneyEnough;
+            }
+
+            _flag = _flagCreator.Create(position);
         }
     }
 
-    private IEnumerator FindFreeCollector()
+    private void OnBaseMoneyEnough()
+    {
+        if (_shop.TryBuyBase(_storage.LootboxAmount))
+        {
+            _findCollectorCoroutine = StartCoroutine(MakeCollectorBuild());
+            _isCollectorNeededToBuild = true;
+        }
+    }
+
+    private Queue<Collector> FindFreeCollectors()
+    {
+        IEnumerable<Collector> freeCollectors = _collectors.Where(collector => collector.IsFree);
+        Queue<Collector> queueCollectors = new Queue<Collector>();
+
+        foreach (Collector collector in freeCollectors)
+        {
+            queueCollectors.Enqueue(collector);
+        }
+
+        return queueCollectors;
+    }
+
+    private IEnumerator MakeCollectorBuild()
     {
         bool isWorking = true;
-        float collectorSearchCooldown = 1f;
+        float collectorSearchCooldown = 0.5f;
         var waitForCooldown = new WaitForSeconds(collectorSearchCooldown);
 
         while (isWorking)
-        {
-            yield return waitForCooldown;
+        { 
+            Queue<Collector> freeCollectors = FindFreeCollectors();
 
-            foreach (Collector collector in _collectors)
+            if(freeCollectors.Count > 0)
             {
-                if (collector.State == State.Free)
-                {
-                    collector.SetBuildingState();
-                    collector.Move(_flag);
-                    isWorking = false;
-                    break;
-                }
+                Collector collector = freeCollectors.Dequeue();
+                collector.StartBuild(_flag, _scanner);
+                _collectors.Remove(collector);
+                _storage.ChangeLootboxAmount(-_shop.BasePrice);
+
+                _flagCreator.ChangeBool(false);
+
+                _isCollectorNeededToBuild = false;
+
+                _storage.AmountChanged -= OnBaseMoneyEnough;
+                _storage.AmountChanged += OnCollectorMoneyEnough;
+
+                isWorking = false;
             }
+
+            yield return waitForCooldown;
         }
     }
 
-    private IEnumerator Scan()
+    private IEnumerator MakeCollectorsGather()
     {
-        var waitForCooldown = new WaitForSeconds(_scanCooldown);
+        float _takeNewLootboxCooldown = 0.5f;
+        var waitForCooldown = new WaitForSeconds(_takeNewLootboxCooldown);
 
         while (enabled)
         {
             yield return waitForCooldown;
 
-            _scanner.Scan(_detectedLootboxes);
-        }
-    }
-
-    private IEnumerator GatherLootbox()
-    {
-        var waitForOneSecond = new WaitForSeconds(_takeNewLootboxCooldown);
-
-        while (enabled)
-        {
-            yield return waitForOneSecond;
-
-            foreach (Collector collector in _collectors)
+            if (_isCollectorNeededToBuild)
             {
-                if (_detectedLootboxes.Count == 0)
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                Lootbox newLootbox = _detectedLootboxes.Peek();
+            Queue<Collector> freeCollectors = FindFreeCollectors();
 
-                if (collector.State == State.Free)
+            for (int i = freeCollectors.Count - 1; i >= 0; i--)
+            {
+                if (_scanner.TryGetLootboxes(out Lootbox lootbox))
                 {
-                    _detectedLootboxes.Dequeue();
-                    collector.SetGatherState();
-                    collector.Move(newLootbox.transform);
-                    newLootbox.MakeReserved();
+                    Collector freeCollector = freeCollectors.Dequeue();
+                    freeCollector.StartGathering(lootbox);
                 }
             }
         }

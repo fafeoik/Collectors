@@ -5,12 +5,15 @@ using UnityEngine.Events;
 
 public class LootboxStorage : MonoBehaviour
 {
-    public int LootboxAmount { get; private set; } = 0;
+    [SerializeField] private int _lootboxAmount;
+
     public event UnityAction AmountChanged;
+
+    public int LootboxAmount => _lootboxAmount;
 
     public void ChangeLootboxAmount(int amount)
     {
-        LootboxAmount += amount;
+        _lootboxAmount += amount;
         AmountChanged?.Invoke();
     }
 }

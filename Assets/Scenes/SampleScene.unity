@@ -960,6 +960,10 @@ PrefabInstance:
       propertyPath: _scanner
       value: 
       objectReference: {fileID: 8407741043602140337}
+    - target: {fileID: 6794422971876901255, guid: 63e1a5430d54d5b45bc9824f23495109, type: 3}
+      propertyPath: _lootboxAmount
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 8145791557668602571, guid: 63e1a5430d54d5b45bc9824f23495109, type: 3}
       propertyPath: m_RootOrder
       value: 6
@@ -1008,7 +1012,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: Base
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 669728207957880387, guid: 63e1a5430d54d5b45bc9824f23495109, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

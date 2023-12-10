@@ -93,7 +93,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7774914945249487093}
-  - component: {fileID: 1841461651243823890}
+  - component: {fileID: 3510929878482496453}
   m_Layer: 0
   m_Name: Collectors
   m_TagString: Untagged
@@ -116,7 +116,7 @@ Transform:
   m_Father: {fileID: 8568611152745524561}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!114 &1841461651243823890
+--- !u!114 &3510929878482496453
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -125,7 +125,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3813773688710656662}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e8b44591c5cce945ab47c541a7f3b10, type: 3}
+  m_Script: {fileID: 11500000, guid: 61ad6bc882bccb3468af88f30aa841a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _collectorPrefab: {fileID: 6873838802385119754, guid: 69e0af137219e0145931e01ab1043db2, type: 3}
@@ -138,7 +138,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8145791557668602571}
-  - component: {fileID: 669728207957880387}
   - component: {fileID: 43496317845139354}
   - component: {fileID: 5510387480884444591}
   - component: {fileID: 6794422971876901255}
@@ -166,18 +165,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &669728207957880387
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8350955009664954135}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 46ff92b25ea130f4fae394bff5db6c3a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &43496317845139354
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -216,9 +203,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe05d4b6c23cdd142b1ecbabd969c49c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _collectorsCreator: {fileID: 1841461651243823890}
+  _collectorsCreator: {fileID: 3510929878482496453}
   _collectorPrice: 3
   _basePrice: 5
+  _lootboxAmount: 3
 --- !u!65 &4921953098850040050
 BoxCollider:
   m_ObjectHideFlags: 0

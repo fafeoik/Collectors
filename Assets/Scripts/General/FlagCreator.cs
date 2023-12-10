@@ -6,7 +6,7 @@ public class FlagCreator : MonoBehaviour
 {
     [SerializeField] private Flag _flagPrefab;
 
-    private Transform _createdFlag;
+    private Flag _createdFlag;
 
     public bool IsFlagCreated { get; private set; } = false;
 
@@ -22,9 +22,9 @@ public class FlagCreator : MonoBehaviour
             Destroy(_createdFlag.gameObject);
         }
 
-        _createdFlag = Instantiate(_flagPrefab.transform, raycastPosition, Quaternion.identity);
+        _createdFlag = Instantiate(_flagPrefab, raycastPosition, Quaternion.identity);
         ChangeBool(true);
 
-        return _createdFlag.GetComponent<Flag>();
+        return _createdFlag;
     }
 }

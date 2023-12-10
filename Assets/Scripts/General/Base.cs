@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[RequireComponent(typeof(LootboxStorage), typeof(FlagCreator), typeof(Shop))]
+[RequireComponent(typeof(FlagCreator), typeof(MoneySystem))]
 public class Base : MonoBehaviour
 {
-    [SerializeField]private LootboxScanner _scanner;
+    [SerializeField] private LootboxScanner _scanner;
 
     private List<Collector> _collectors = new List<Collector>();
-    private LootboxStorage _storage;
     private FlagCreator _flagCreator;
     private Flag _flag;
-    private Shop _shop;
+    private MoneySystem _moneySystem;
 
     private Coroutine _takeLootboxCoroutine;
     private Coroutine _findCollectorCoroutine;
@@ -26,7 +25,7 @@ public class Base : MonoBehaviour
 
         _takeLootboxCoroutine = StartCoroutine(MakeCollectorsGather());
 
-        _storage.AmountChanged += OnCollectorMoneyEnough;
+        _moneySystem.AmountChanged += OnCollectorMoneyEnough;
         OnCollectorMoneyEnough();
     }
 
@@ -38,7 +37,7 @@ public class Base : MonoBehaviour
         if (_findCollectorCoroutine != null)
             StopCoroutine(_findCollectorCoroutine);
 
-        _storage.AmountChanged -= OnCollectorMoneyEnough;
+        _moneySystem.AmountChanged -= OnCollectorMoneyEnough;
     }
 
     public void GetScanner(LootboxScanner scanner)
@@ -48,17 +47,16 @@ public class Base : MonoBehaviour
 
     private void GetRequiredComponents()
     {
-        _storage = GetComponent<LootboxStorage>();
         _flagCreator = GetComponent<FlagCreator>();
-        _shop = GetComponent<Shop>();
+        _moneySystem = GetComponent<MoneySystem>();
     }
 
     private void OnCollectorMoneyEnough()
     {
-        if (_collectors.Count < _maxCollectorsAmount && _shop.TryBuyCollector(_storage.LootboxAmount, out Collector collector))
+        if (_collectors.Count < _maxCollectorsAmount && _moneySystem.TryBuyCollector(_moneySystem.LootboxAmount, out Collector collector))
         {
             AddCollector(collector);
-            _storage.ChangeLootboxAmount(-_shop.CollectorPrice);
+            _moneySystem.ChangeLootboxAmount(-_moneySystem.CollectorPrice);
         }
     }
 
@@ -76,8 +74,8 @@ public class Base : MonoBehaviour
         {
             if (_flagCreator.IsFlagCreated == false)
             {
-                _storage.AmountChanged -= OnCollectorMoneyEnough;
-                _storage.AmountChanged += OnBaseMoneyEnough;
+                _moneySystem.AmountChanged -= OnCollectorMoneyEnough;
+                _moneySystem.AmountChanged += OnBaseMoneyEnough;
             }
 
             _flag = _flagCreator.Create(position);
@@ -86,10 +84,10 @@ public class Base : MonoBehaviour
 
     private void OnBaseMoneyEnough()
     {
-        if (_shop.TryBuyBase(_storage.LootboxAmount))
+        if (_moneySystem.TryBuyBase(_moneySystem.LootboxAmount) && _isCollectorNeededToBuild == false)
         {
-            _findCollectorCoroutine = StartCoroutine(MakeCollectorBuild());
             _isCollectorNeededToBuild = true;
+            _findCollectorCoroutine = StartCoroutine(MakeCollectorBuild());
         }
     }
 
@@ -121,16 +119,15 @@ public class Base : MonoBehaviour
                 Collector collector = freeCollectors.Dequeue();
                 collector.StartBuild(_flag, _scanner);
                 _collectors.Remove(collector);
-                _storage.ChangeLootboxAmount(-_shop.BasePrice);
+                _moneySystem.ChangeLootboxAmount(-_moneySystem.BasePrice);
 
                 _flagCreator.ChangeBool(false);
 
-                _isCollectorNeededToBuild = false;
-
-                _storage.AmountChanged -= OnBaseMoneyEnough;
-                _storage.AmountChanged += OnCollectorMoneyEnough;
+                _moneySystem.AmountChanged -= OnBaseMoneyEnough;
+                _moneySystem.AmountChanged += OnCollectorMoneyEnough;
 
                 isWorking = false;
+                _isCollectorNeededToBuild = false;
             }
 
             yield return waitForCooldown;
@@ -155,7 +152,7 @@ public class Base : MonoBehaviour
 
             for (int i = freeCollectors.Count - 1; i >= 0; i--)
             {
-                if (_scanner.TryGetLootboxes(out Lootbox lootbox))
+                if (_scanner.TryGetLootbox(out Lootbox lootbox))
                 {
                     Collector freeCollector = freeCollectors.Dequeue();
                     freeCollector.StartGathering(lootbox);

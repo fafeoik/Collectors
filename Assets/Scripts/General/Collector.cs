@@ -7,8 +7,9 @@ public class Collector : MonoBehaviour
 {
     [SerializeField] private Transform _trunk;
     [SerializeField] private float _speed;
+    [SerializeField] private Transform _smallBasePrefab;
 
-    private LootboxStorage _storage;
+    private MoneySystem _moneySystem;
     private Base _base;
     private Lootbox _targetLootbox;
     private Flag _targetFlag;
@@ -48,7 +49,7 @@ public class Collector : MonoBehaviour
     public void Init(Base collectorBase)
     {
         _base = collectorBase;
-        _storage = _base.GetComponent<LootboxStorage>();
+        _moneySystem = _base.GetComponent<MoneySystem>();
     }
 
     private void TakeLootbox()
@@ -63,16 +64,20 @@ public class Collector : MonoBehaviour
         int lootboxAmount = 1;
 
         Destroy(_targetLootbox.gameObject);
-        _storage.ChangeLootboxAmount(lootboxAmount);
+        _moneySystem.ChangeLootboxAmount(lootboxAmount);
     }
 
     private IEnumerator BuildBase(LootboxScanner scanner)
     {
         IsFree = false;
 
+        Transform smallBase = Instantiate(_smallBasePrefab, _trunk);
+
         yield return StartCoroutine(Move(_targetFlag.transform));
 
         _baseBuilder.Build(this,_targetFlag, scanner);
+
+        Destroy(smallBase.gameObject);
 
         IsFree = true;
     }

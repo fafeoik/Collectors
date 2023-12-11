@@ -206,7 +206,7 @@ MonoBehaviour:
   _collectorsCreator: {fileID: 3510929878482496453}
   _collectorPrice: 3
   _basePrice: 5
-  _lootboxAmount: 3
+  _lootboxAmount: 0
 --- !u!65 &4921953098850040050
 BoxCollider:
   m_ObjectHideFlags: 0

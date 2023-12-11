@@ -62,7 +62,7 @@ public class Base : MonoBehaviour
 
     public void AddCollector(Collector collector)
     {
-        collector.Init(this);
+        collector.Init(this, _scanner);
         _collectors.Add(collector);
     }
 
@@ -117,7 +117,7 @@ public class Base : MonoBehaviour
             if(freeCollectors.Count > 0)
             {
                 Collector collector = freeCollectors.Dequeue();
-                collector.StartBuild(_flag, _scanner);
+                collector.BuildBase(_flag);
                 _collectors.Remove(collector);
                 _moneySystem.ChangeLootboxAmount(-_moneySystem.BasePrice);
 
@@ -155,7 +155,7 @@ public class Base : MonoBehaviour
                 if (_scanner.TryGetLootbox(out Lootbox lootbox))
                 {
                     Collector freeCollector = freeCollectors.Dequeue();
-                    freeCollector.StartGathering(lootbox);
+                    freeCollector.GatherLootbox(lootbox);
                 }
             }
         }

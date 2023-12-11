@@ -14,7 +14,6 @@ public class MoneySystem : MonoBehaviour
 
     public int CollectorPrice => _collectorPrice;
     public int BasePrice => _basePrice;
-
     public int LootboxAmount => _lootboxAmount;
 
     public void ChangeLootboxAmount(int amount)

@@ -15,7 +15,7 @@ public class BaseBuilder : MonoBehaviour
     private LootboxScanner _scanner;
     private Coroutine _buildCoroutine;
 
-    public event UnityAction BuildCompleted;
+    public event UnityAction<Base> BuildCompleted;
 
     private void Start()
     {
@@ -57,13 +57,10 @@ public class BaseBuilder : MonoBehaviour
 
         Transform _botsContainer = newBase.GetComponentInChildren<BotsCreator>().transform;
 
-        Bot bot = GetComponent<Bot>();
-
-        bot.transform.SetParent(_botsContainer);
-        newBase.AddBot(bot);
+        transform.SetParent(_botsContainer);
 
         Destroy(flag.gameObject);
 
-        BuildCompleted?.Invoke();
+        BuildCompleted?.Invoke(newBase);
     }
 }

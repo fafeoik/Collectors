@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Camera))]
 public class RaycastHandler : MonoBehaviour
 {
     private Camera _mainCamera;

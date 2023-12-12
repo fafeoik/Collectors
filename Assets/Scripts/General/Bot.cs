@@ -18,10 +18,11 @@ public class Bot : MonoBehaviour
 
     private void OnDisable()
     {
-        _baseBuilder.BuildCompleted -= BecomeFree;
+        _baseBuilder.BuildCompleted -= OnBuildComplete;
+        _collector.LootboxCollected -= OnLootboxCollected;
     }
 
-    public void Init(Base collectorBase,LootboxScanner scanner, LootboxStorage storage)
+    public void Init(Base collectorBase, LootboxScanner scanner, LootboxStorage storage)
     {
         _collector.Init(collectorBase, storage);
         _baseBuilder.Init(scanner);
@@ -31,7 +32,7 @@ public class Bot : MonoBehaviour
     {
         IsFree = false;
 
-        _collector.LootboxCollected += BecomeFree;
+        _collector.LootboxCollected += OnLootboxCollected;
         _collector.StartCollecting(targetLootbox);
     }
 
@@ -39,9 +40,16 @@ public class Bot : MonoBehaviour
     {
         IsFree = false;
 
-        _baseBuilder.BuildCompleted += BecomeFree;
+        _baseBuilder.BuildCompleted += OnBuildComplete;
         _baseBuilder.StartBuilding(flag);
     }
 
-    private void BecomeFree() => IsFree = true;
+
+    private void OnLootboxCollected() => IsFree = true;
+
+    private void OnBuildComplete(Base newBase)
+    {
+        IsFree = true;
+        newBase.AddBot(this);
+    }
 }

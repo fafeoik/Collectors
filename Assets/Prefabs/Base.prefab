@@ -93,9 +93,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7774914945249487093}
-  - component: {fileID: 3510929878482496453}
+  - component: {fileID: 597795405206261698}
+  - component: {fileID: 4321038948202944861}
   m_Layer: 0
-  m_Name: Collectors
+  m_Name: Bots
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -116,7 +117,7 @@ Transform:
   m_Father: {fileID: 8568611152745524561}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!114 &3510929878482496453
+--- !u!114 &597795405206261698
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -125,10 +126,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 3813773688710656662}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 61ad6bc882bccb3468af88f30aa841a5, type: 3}
+  m_Script: {fileID: 11500000, guid: e5be0926a11d9b04abb36e01794117eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _collectorPrefab: {fileID: 6873838802385119754, guid: 69e0af137219e0145931e01ab1043db2, type: 3}
+  _botPrefab: {fileID: 6873838802385119754, guid: 69e0af137219e0145931e01ab1043db2, type: 3}
+--- !u!114 &4321038948202944861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3813773688710656662}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5be0926a11d9b04abb36e01794117eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _botPrefab: {fileID: 6873838802385119754, guid: 69e0af137219e0145931e01ab1043db2, type: 3}
 --- !u!1 &8350955009664954135
 GameObject:
   m_ObjectHideFlags: 0
@@ -203,8 +217,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe05d4b6c23cdd142b1ecbabd969c49c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _collectorsCreator: {fileID: 3510929878482496453}
-  _collectorPrice: 3
+  _botsCreator: {fileID: 4321038948202944861}
+  _botPrice: 3
   _basePrice: 5
   _lootboxAmount: 0
 --- !u!65 &4921953098850040050

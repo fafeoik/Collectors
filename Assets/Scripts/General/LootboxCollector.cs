@@ -3,40 +3,41 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class LootboxGatherner : MonoBehaviour
+[RequireComponent(typeof(BotMover))]
+public class LootboxCollector : MonoBehaviour
 {
     [SerializeField] private Transform _trunk;
 
-    private MoneySystem _moneySystem;
-    private CollectorMover _mover;
+    private LootboxStorage _storage;
+    private BotMover _mover;
     private Lootbox _targetLootbox;
     private Base _base;
 
-    private Coroutine _gatherCoroutine;
+    private Coroutine _collectCoroutine;
 
-    public event UnityAction LootboxGathered;
+    public event UnityAction LootboxCollected;
 
     private void Start()
     {
-        _mover = GetComponent<CollectorMover>();
+        _mover = GetComponent<BotMover>();
     }
 
     private void OnDestroy()
     {
-        if (_gatherCoroutine != null)
-            StopCoroutine(_gatherCoroutine);
+        if (_collectCoroutine != null)
+            StopCoroutine(_collectCoroutine);
     }
 
-    public void Init(Base collectorBase)
+    public void Init(Base collectorBase, LootboxStorage storage)
     {
         _base = collectorBase;
-        _moneySystem = _base.GetComponent<MoneySystem>();
+        _storage = storage;
     }
 
-    public void StartGathering(Lootbox targetLootbox)
+    public void StartCollecting(Lootbox targetLootbox)
     {
         _targetLootbox = targetLootbox;
-        _gatherCoroutine = StartCoroutine(GatherLootbox());
+        _collectCoroutine = StartCoroutine(CollectLootbox());
     }
 
     private void TakeLootbox()
@@ -51,10 +52,10 @@ public class LootboxGatherner : MonoBehaviour
         int lootboxAmount = 1;
 
         Destroy(_targetLootbox.gameObject);
-        _moneySystem.ChangeLootboxAmount(lootboxAmount);
+        _storage.ChangeLootboxAmount(lootboxAmount);
     }
 
-    private IEnumerator GatherLootbox()
+    private IEnumerator CollectLootbox()
     {
         yield return StartCoroutine(_mover.MoveTo(_targetLootbox.transform));
 
@@ -64,6 +65,6 @@ public class LootboxGatherner : MonoBehaviour
 
         UnloadLootbox();
 
-        LootboxGathered?.Invoke();
+        LootboxCollected?.Invoke();
     }
 }

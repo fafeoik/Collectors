@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CollectorMover : MonoBehaviour
+public class BotMover : MonoBehaviour
 {
     [SerializeField] private float _speed;
 

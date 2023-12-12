@@ -8,12 +8,9 @@ public class FlagCreator : MonoBehaviour
 
     private Flag _createdFlag;
 
-    public bool IsFlagCreated { get; private set; } = false;
+    private bool _isFlagCreated => _createdFlag != null;
 
-    public void ChangeBool(bool isFlagCreated)
-    {
-        IsFlagCreated = isFlagCreated;
-    }
+    public bool IsFlagCreated => _isFlagCreated;
 
     public Flag Create(Vector3 raycastPosition)
     {
@@ -23,7 +20,6 @@ public class FlagCreator : MonoBehaviour
         }
 
         _createdFlag = Instantiate(_flagPrefab, raycastPosition, Quaternion.identity);
-        ChangeBool(true);
 
         return _createdFlag;
     }

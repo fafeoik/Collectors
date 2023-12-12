@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+[RequireComponent(typeof(BotMover))]
 public class BaseBuilder : MonoBehaviour
 {
     [SerializeField] private Base _basePrefab;
@@ -10,7 +11,7 @@ public class BaseBuilder : MonoBehaviour
     [SerializeField] private Transform _trunk;
 
     private Flag _targetFlag;
-    private CollectorMover _mover;
+    private BotMover _mover;
     private LootboxScanner _scanner;
     private Coroutine _buildCoroutine;
 
@@ -18,7 +19,7 @@ public class BaseBuilder : MonoBehaviour
 
     private void Start()
     {
-        _mover = GetComponent<CollectorMover>();
+        _mover = GetComponent<BotMover>();
     }
 
     private void OnDestroy()
@@ -54,12 +55,12 @@ public class BaseBuilder : MonoBehaviour
         Base newBase = Instantiate(_basePrefab, flag.transform.position, Quaternion.identity);
         newBase.GetScanner(_scanner);
 
-        Transform _collectorsContainer = newBase.GetComponentInChildren<CollectorsCreator>().transform;
+        Transform _botsContainer = newBase.GetComponentInChildren<BotsCreator>().transform;
 
-        Collector collector = GetComponent<Collector>();
+        Bot bot = GetComponent<Bot>();
 
-        collector.transform.SetParent(_collectorsContainer);
-        newBase.AddCollector(collector);
+        bot.transform.SetParent(_botsContainer);
+        newBase.AddBot(bot);
 
         Destroy(flag.gameObject);
 

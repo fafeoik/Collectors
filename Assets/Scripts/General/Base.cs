@@ -3,30 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[RequireComponent(typeof(FlagCreator), typeof(MoneySystem))]
+[RequireComponent(typeof(FlagCreator), typeof(LootboxStorage))]
 public class Base : MonoBehaviour
 {
     [SerializeField] private LootboxScanner _scanner;
 
-    private List<Collector> _collectors = new List<Collector>();
+    private List<Bot> _bots = new List<Bot>();
     private FlagCreator _flagCreator;
     private Flag _flag;
-    private MoneySystem _moneySystem;
+    private LootboxStorage _storage;
 
     private Coroutine _takeLootboxCoroutine;
-    private Coroutine _findCollectorCoroutine;
+    private Coroutine _findBotCoroutine;
 
-    private int _maxCollectorsAmount = 3;
-    private bool _isCollectorNeededToBuild = false;
+    private int _maxBotsAmount = 3;
+    private bool _isBotNeededToBuild = false;
 
     private void Start()
     {
         GetRequiredComponents();
 
-        _takeLootboxCoroutine = StartCoroutine(MakeCollectorsGather());
+        _takeLootboxCoroutine = StartCoroutine(MakeBotsCollect());
 
-        _moneySystem.AmountChanged += OnCollectorMoneyEnough;
-        OnCollectorMoneyEnough();
+        _storage.LootboxAmountChanged += OnBotMoneyEnough;
+        OnBotMoneyEnough();
     }
 
     private void OnDestroy()
@@ -34,10 +34,10 @@ public class Base : MonoBehaviour
         if (_takeLootboxCoroutine != null)
             StopCoroutine(_takeLootboxCoroutine);
 
-        if (_findCollectorCoroutine != null)
-            StopCoroutine(_findCollectorCoroutine);
+        if (_findBotCoroutine != null)
+            StopCoroutine(_findBotCoroutine);
 
-        _moneySystem.AmountChanged -= OnCollectorMoneyEnough;
+        _storage.LootboxAmountChanged -= OnBotMoneyEnough;
     }
 
     public void GetScanner(LootboxScanner scanner)
@@ -48,34 +48,38 @@ public class Base : MonoBehaviour
     private void GetRequiredComponents()
     {
         _flagCreator = GetComponent<FlagCreator>();
-        _moneySystem = GetComponent<MoneySystem>();
+        _storage = GetComponent<LootboxStorage>();
     }
 
-    private void OnCollectorMoneyEnough()
+    private void OnBotMoneyEnough()
     {
-        if (_collectors.Count < _maxCollectorsAmount && _moneySystem.TryBuyCollector(_moneySystem.LootboxAmount, out Collector collector))
+        if (_bots.Count < _maxBotsAmount && _storage.TryBuyBot(_storage.LootboxAmount, out Bot bot))
         {
-            AddCollector(collector);
-            _moneySystem.ChangeLootboxAmount(-_moneySystem.CollectorPrice);
+            AddBot(bot);
         }
     }
 
-    public void AddCollector(Collector collector)
+    public void AddBot(Bot bot)
     {
-        collector.Init(this, _scanner);
-        _collectors.Add(collector);
+        if(_storage == null)
+        {
+            _storage = GetComponent<LootboxStorage>();
+        }
+
+        bot.Init(this, _scanner, _storage);
+        _bots.Add(bot);
     }
 
     public void StartBuilding(Vector3 position)
     {
         int collectorsRequiredToBuild = 2;
 
-        if(_collectors.Count >= collectorsRequiredToBuild)
+        if(_bots.Count >= collectorsRequiredToBuild)
         {
             if (_flagCreator.IsFlagCreated == false)
             {
-                _moneySystem.AmountChanged -= OnCollectorMoneyEnough;
-                _moneySystem.AmountChanged += OnBaseMoneyEnough;
+                _storage.LootboxAmountChanged -= OnBotMoneyEnough;
+                _storage.LootboxAmountChanged += OnBaseMoneyEnough;
             }
 
             _flag = _flagCreator.Create(position);
@@ -84,57 +88,54 @@ public class Base : MonoBehaviour
 
     private void OnBaseMoneyEnough()
     {
-        if (_moneySystem.TryBuyBase(_moneySystem.LootboxAmount) && _isCollectorNeededToBuild == false)
+        if (_storage.TryBuyBase(_storage.LootboxAmount) && _isBotNeededToBuild == false)
         {
-            _isCollectorNeededToBuild = true;
-            _findCollectorCoroutine = StartCoroutine(MakeCollectorBuild());
+            _isBotNeededToBuild = true;
+            _findBotCoroutine = StartCoroutine(MakeBotBuild());
         }
     }
 
-    private Queue<Collector> FindFreeCollectors()
+    private Queue<Bot> FindFreeBots()
     {
-        IEnumerable<Collector> freeCollectors = _collectors.Where(collector => collector.IsFree);
-        Queue<Collector> queueCollectors = new Queue<Collector>();
+        IEnumerable<Bot> freeBots = _bots.Where(bot => bot.IsFree);
+        Queue<Bot> queueBots = new Queue<Bot>();
 
-        foreach (Collector collector in freeCollectors)
+        foreach (Bot bot in freeBots)
         {
-            queueCollectors.Enqueue(collector);
+            queueBots.Enqueue(bot);
         }
 
-        return queueCollectors;
+        return queueBots;
     }
 
-    private IEnumerator MakeCollectorBuild()
+    private IEnumerator MakeBotBuild()
     {
         bool isWorking = true;
-        float collectorSearchCooldown = 0.5f;
-        var waitForCooldown = new WaitForSeconds(collectorSearchCooldown);
+        float botSearchCooldown = 0.5f;
+        var waitForCooldown = new WaitForSeconds(botSearchCooldown);
 
         while (isWorking)
         { 
-            Queue<Collector> freeCollectors = FindFreeCollectors();
+            Queue<Bot> freeBots = FindFreeBots();
 
-            if(freeCollectors.Count > 0)
+            if(freeBots.Count > 0)
             {
-                Collector collector = freeCollectors.Dequeue();
-                collector.BuildBase(_flag);
-                _collectors.Remove(collector);
-                _moneySystem.ChangeLootboxAmount(-_moneySystem.BasePrice);
+                Bot bot = freeBots.Dequeue();
+                bot.BuildBase(_flag);
+                _bots.Remove(bot);
 
-                _flagCreator.ChangeBool(false);
-
-                _moneySystem.AmountChanged -= OnBaseMoneyEnough;
-                _moneySystem.AmountChanged += OnCollectorMoneyEnough;
+                _storage.LootboxAmountChanged -= OnBaseMoneyEnough;
+                _storage.LootboxAmountChanged += OnBotMoneyEnough;
 
                 isWorking = false;
-                _isCollectorNeededToBuild = false;
+                _isBotNeededToBuild = false;
             }
 
             yield return waitForCooldown;
         }
     }
 
-    private IEnumerator MakeCollectorsGather()
+    private IEnumerator MakeBotsCollect()
     {
         float _takeNewLootboxCooldown = 0.5f;
         var waitForCooldown = new WaitForSeconds(_takeNewLootboxCooldown);
@@ -143,19 +144,19 @@ public class Base : MonoBehaviour
         {
             yield return waitForCooldown;
 
-            if (_isCollectorNeededToBuild)
+            if (_isBotNeededToBuild)
             {
                 continue;
             }
 
-            Queue<Collector> freeCollectors = FindFreeCollectors();
+            Queue<Bot> freeBots = FindFreeBots();
 
-            for (int i = freeCollectors.Count - 1; i >= 0; i--)
+            for (int i = freeBots.Count - 1; i >= 0; i--)
             {
                 if (_scanner.TryGetLootbox(out Lootbox lootbox))
                 {
-                    Collector freeCollector = freeCollectors.Dequeue();
-                    freeCollector.GatherLootbox(lootbox);
+                    Bot freeBot = freeBots.Dequeue();
+                    freeBot.GatherLootbox(lootbox);
                 }
             }
         }
